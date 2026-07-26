@@ -1,124 +1,411 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#0f172a">
-  <title>حساباتي</title>
-  <style>
-    :root{
-      --bg:#f1f5f9;--card:#fff;--text:#0f172a;--muted:#64748b;--border:#e2e8f0;
-      --primary:#2563eb;--green:#16a34a;--green-soft:#f0fdf4;--green-border:#86efac;
-      --red:#dc2626;--red-soft:#fef2f2;--red-border:#fca5a5;--shadow:0 7px 22px rgba(15,23,42,.07)
+import React, { useState, useEffect } from 'react';
+import { Transaction, AppSettings, FilterTab, DebtType } from './types';
+import { INITIAL_TRANSACTIONS, DEFAULT_SETTINGS } from './data/initialData';
+import { exportToExcel, triggerPDFPrint } from './utils/exports';
+import { getDebtStatus, groupByPerson } from './utils/formatters';
+
+import { Navbar } from './components/Navbar';
+import { BottomNav, ActiveTab } from './components/BottomNav';
+import { DashboardView } from './components/DashboardView';
+import { TransactionsView } from './components/TransactionsView';
+import { StatisticsView } from './components/StatisticsView';
+import { SettingsView } from './components/SettingsView';
+
+import { TransactionModal } from './components/TransactionModal';
+import { SettlementModal } from './components/SettlementModal';
+import { PersonDetailModal } from './components/PersonDetailModal';
+import { ExportPrintStatement } from './components/ExportPrintStatement';
+import { PersonMenuDots } from './components/PersonMenuDots';
+import { PWAInstallBanner } from './components/PWAInstallBanner';
+
+import { Search, X, User } from 'lucide-react';
+
+const STORAGE_KEY_TX = 'lee_w_aly_transactions_v2';
+const STORAGE_KEY_SETTINGS = 'lee_w_aly_settings_v2';
+
+export default function App() {
+  // 1. Local Persistence Initializers
+  const [transactions, setTransactions] = useState<Transaction[]>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY_TX);
+      return saved ? JSON.parse(saved) : INITIAL_TRANSACTIONS;
+    } catch {
+      return INITIAL_TRANSACTIONS;
     }
-    *{box-sizing:border-box}
-    body{margin:0;min-height:100vh;background:var(--bg);color:var(--text);font-family:"Segoe UI",Tahoma,Arial,sans-serif}
-    button,input,select{font:inherit}
-    .app{width:min(100%,900px);margin:auto;padding:12px 10px 80px}
-    .hero{background:linear-gradient(135deg,#0f172a,#1e3a8a);color:#fff;border-radius:18px;padding:20px 17px;box-shadow:var(--shadow)}
-    .hero-row{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
-    .hero h1{margin:0 0 5px;font-size:27px}.hero p{margin:0;color:#cbd5e1;font-size:12px;line-height:1.7}
-        .summary{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:11px 0}
-    .stat{background:#fff;border:1px solid var(--border);border-radius:15px;padding:14px;box-shadow:0 3px 12px rgba(15,23,42,.04)}
-    .stat-label{font-size:11px;color:var(--muted);margin-bottom:7px}.stat-value{direction:ltr;text-align:right;font-size:22px;font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .stat.green .stat-value{color:var(--green)}.stat.red .stat-value{color:var(--red)}.currency{font-size:10px;color:var(--muted);margin-right:4px}
-    .toolbar{position:sticky;top:5px;z-index:5;display:grid;grid-template-columns:1fr auto auto;gap:7px;background:#fff;border:1px solid var(--border);border-radius:14px;padding:8px;box-shadow:var(--shadow)}
-    .search{width:100%;height:42px;border:1px solid var(--border);border-radius:10px;background:#f8fafc;padding:0 12px;outline:none}
-    .search:focus{border-color:#93c5fd;box-shadow:0 0 0 3px #dbeafe}
-    .btn{height:42px;border:0;border-radius:10px;padding:0 13px;font-weight:700;cursor:pointer}.add{background:var(--primary);color:#fff}.backup{background:#ecfdf5;color:#047857;border:1px solid #a7f3d0}
-    .modal{position:fixed;inset:0;background:rgba(15,23,42,.65);display:none;align-items:center;justify-content:center;padding:14px;z-index:30}.modal.show{display:flex}.modal-card{width:min(100%,520px);max-height:90vh;overflow:auto;background:#fff;border-radius:18px;padding:16px;box-shadow:0 20px 60px rgba(0,0,0,.25)}.modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}.modal-head h3{margin:0;font-size:18px}.close{width:36px;height:36px;border:0;border-radius:9px;background:#f1f5f9;font-size:20px;cursor:pointer}.backup-note{font-size:12px;color:var(--muted);line-height:1.7;margin:0 0 10px}.backup-area{width:100%;height:145px;direction:ltr;text-align:left;border:1px solid var(--border);border-radius:10px;padding:10px;font:12px monospace;resize:vertical;outline:none}.backup-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:9px}.backup-actions button{height:42px;border:0;border-radius:10px;font-weight:700;cursor:pointer}.copy-btn{background:var(--primary);color:#fff}.restore-btn{background:#fff7ed;color:#c2410c;border:1px solid #fdba74!important}.download-btn{background:#ecfdf5;color:#047857;border:1px solid #86efac!important}.file-btn{display:flex;align-items:center;justify-content:center;background:#f8fafc;color:#334155;border:1px solid var(--border);border-radius:10px;height:42px;font-weight:700;cursor:pointer}.danger-zone{margin-top:12px;padding-top:12px;border-top:1px solid var(--border)}.reset-btn{width:100%;height:42px;border:1px solid #fecaca;border-radius:10px;background:#fef2f2;color:var(--red);font-weight:700;cursor:pointer}
-    .section{margin:11px 0;background:#fff;border:1px solid var(--border);border-radius:16px;overflow:hidden;box-shadow:0 4px 15px rgba(15,23,42,.04)}
-    .section-head{display:flex;align-items:center;justify-content:space-between;padding:13px 14px;border-bottom:1px solid var(--border)}
-    .section-title{display:flex;align-items:center;gap:8px}.section-title span{width:5px;height:24px;border-radius:9px}.receivable .section-title span{background:var(--green)}.payable .section-title span{background:var(--red)}
-    h2{font-size:15px;margin:0}.badge{font-size:11px;color:var(--muted);background:#f8fafc;border:1px solid var(--border);border-radius:999px;padding:4px 8px}
-    .list{display:grid;gap:9px;padding:8px}
-    .account{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;background:#fff;border:1px solid var(--border);border-radius:14px;padding:8px;box-shadow:0 2px 9px rgba(15,23,42,.04)}
-    .cell{display:flex;flex-direction:column;gap:4px;min-width:0}.cell label{font-size:10px;color:var(--muted);font-weight:700;padding-right:2px}
-    .name-cell{grid-column:1/-1;padding-left:30%}.action-cell{grid-column:1/-1;border-top:1px solid #edf2f7;padding-top:9px;margin-top:2px}
-    .name-box{display:flex;align-items:center;gap:7px;border:1.5px solid;border-radius:9px;padding:2px 7px;min-height:38px}.name-dot{width:9px;height:9px;border-radius:50%;flex:0 0 auto}
-    .receivable .name-box{border-color:var(--green);background:#fff}.receivable .name-dot{background:var(--green)}
-    .payable .name-box{border-color:var(--red);background:#fff}.payable .name-dot{background:var(--red)}
-    .field{width:100%;height:38px;border:1.5px solid;border-radius:9px;padding:0 5px;outline:none;text-align:center;direction:ltr;font-size:13px;font-variant-numeric:tabular-nums;background:#fff}
-    .name-field{border:0!important;background:transparent!important;box-shadow:none!important;text-align:right;direction:rtl;font-size:14px;padding-right:2px}
-    .receivable .money-field,.receivable .remaining{border-color:var(--green);background:#fff}
-    .payable .money-field,.payable .remaining{border-color:var(--red);background:#fff}
-    .field:focus{background:#fff!important}
-    .receivable .field:focus{border-color:var(--green)!important;box-shadow:0 0 0 3px #dcfce7}
-    .payable .field:focus{border-color:var(--red)!important;box-shadow:0 0 0 3px #fee2e2}.remaining{height:38px;border:1.5px solid;border-radius:9px;display:flex;align-items:center;justify-content:center;direction:ltr;font-size:13px;font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .actions{display:flex;gap:7px}.type{height:38px;flex:1;border:1px solid var(--border);border-radius:9px;background:#fff;padding:0 7px}.delete{height:38px;width:45px;border:0;border-radius:9px;background:var(--red-soft);color:var(--red);font-weight:800;cursor:pointer}
-    .empty{text-align:center;padding:25px;color:var(--muted);font-size:13px}.footer{text-align:center;color:var(--muted);font-size:11px;line-height:1.6;padding:5px 20px}
-    .toast{position:fixed;left:50%;bottom:20px;transform:translate(-50%,80px);opacity:0;background:#0f172a;color:#fff;padding:10px 15px;border-radius:11px;transition:.25s;z-index:10;font-size:12px}.toast.show{transform:translate(-50%,0);opacity:1}
-    @media(max-width:390px){.hero p{display:none}.summary{grid-template-columns:1fr}.stat{display:flex;align-items:center;justify-content:space-between}.stat-label{margin:0}.stat-value{font-size:19px}.toolbar{grid-template-columns:1fr auto}.backup{grid-row:2;grid-column:1}.add{grid-row:2;grid-column:2}.name-cell{padding-left:18%}.field,.remaining{font-size:12px;padding-left:2px;padding-right:2px}}
-  </style>
-</head>
-<body>
-<main class="app">
-  <header class="hero"><div class="hero-row"><div><h1>حساباتي</h1><p>متابعة المبالغ والمدفوعات بسهولة.</p></div></div></header>
-  <section class="summary">
-    <article class="stat green"><div class="stat-label">إجمالي مستحق لي</div><div class="stat-value"><span id="sumLiya">0</span><span class="currency">ج.م</span></div></article>
-    <article class="stat red"><div class="stat-label">إجمالي مستحق عليّ</div><div class="stat-value"><span id="sumAlih">0</span><span class="currency">ج.م</span></div></article>
-  </section>
-  <div class="toolbar">
-    <input id="search" class="search" type="search" placeholder="البحث بالاسم..." oninput="render()">
-    <button class="btn backup" onclick="openBackup()">نسخة احتياطية</button>
-    <button class="btn add" onclick="addItem()">＋ إضافة</button>
-  </div>
-  <section class="section receivable"><div class="section-head"><div class="section-title"><span></span><h2>مبالغ مستحقة لي</h2></div><div class="badge" id="countLiya">0 بند</div></div><div class="list" id="listLiya"></div></section>
-  <section class="section payable"><div class="section-head"><div class="section-title"><span></span><h2>مبالغ مستحقة عليّ</h2></div><div class="badge" id="countAlih">0 بند</div></div><div class="list" id="listAlih"></div></section>
-  <div class="footer">البيانات محفوظة محليًا داخل التطبيق ولا يتم إرسالها إلى أي جهة.</div>
-</main>
-<div class="modal" id="backupModal" onclick="if(event.target===this)closeBackup()">
-  <div class="modal-card">
-    <div class="modal-head"><h3>النسخة الاحتياطية</h3><button class="close" onclick="closeBackup()">×</button></div>
-    <p class="backup-note">انسخ النص واحفظه في مكان آمن، أو نزّل ملف JSON. للاستعادة الصق نسخة سابقة ثم اضغط «استعادة»، أو اختر ملف النسخة الاحتياطية.</p>
-    <textarea id="backupText" class="backup-area" placeholder="سيظهر هنا نص النسخة الاحتياطية"></textarea>
-    <div class="backup-actions">
-      <button class="copy-btn" onclick="copyBackup()">نسخ النص</button>
-      <button class="download-btn" onclick="downloadBackup()">تنزيل ملف</button>
-      <button class="restore-btn" onclick="restoreBackup()">استعادة النص</button>
-      <label class="file-btn">اختيار ملف<input id="backupFile" type="file" accept="application/json,.json" hidden onchange="restoreFile(this)"></label>
+  });
+
+  const [settings, setSettings] = useState<AppSettings>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY_SETTINGS);
+      return saved ? JSON.parse(saved) : DEFAULT_SETTINGS;
+    } catch {
+      return DEFAULT_SETTINGS;
+    }
+  });
+
+  // Save changes to localStorage
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY_TX, JSON.stringify(transactions));
+  }, [transactions]);
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY_SETTINGS, JSON.stringify(settings));
+    
+    // Apply dark class to root document element
+    if (settings.darkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [settings]);
+
+  // 2. Active Tab & Navigation State
+  const [activeTab, setActiveTab] = useState<ActiveTab>('dashboard');
+  const [activeFilterTab, setActiveFilterTab] = useState<FilterTab>('all');
+
+  // 3. Modals State
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
+  const [defaultAddType, setDefaultAddType] = useState<DebtType>('for_me');
+
+  const [isSettlementModalOpen, setIsSettlementModalOpen] = useState(false);
+  const [settlementTransaction, setSettlementTransaction] = useState<Transaction | null>(null);
+
+  const [selectedPersonName, setSelectedPersonName] = useState<string | null>(null);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [quickSearchTerm, setQuickSearchTerm] = useState('');
+
+  // Count unpaid items for navbar badge
+  const unpaidCount = transactions.filter((t) => getDebtStatus(t) !== 'paid').length;
+
+  // Gather all unique people names for autocompletion
+  const existingPeopleNames = Array.from(
+    new Set(transactions.map((t) => t.personName.trim()))
+  );
+
+  // 4. Handlers
+  const handleUpdateSettings = (newSettings: Partial<AppSettings>) => {
+    setSettings((prev) => ({ ...prev, ...newSettings }));
+  };
+
+  const handleOpenAddModal = (defaultType: DebtType = 'for_me') => {
+    setEditingTransaction(null);
+    setDefaultAddType(defaultType);
+    setIsAddModalOpen(true);
+  };
+
+  const handleOpenEditModal = (tx: Transaction) => {
+    setEditingTransaction(tx);
+    setIsAddModalOpen(true);
+  };
+
+  const handleSaveTransaction = (txData: Partial<Transaction>) => {
+    if (editingTransaction) {
+      // Update existing
+      setTransactions((prev) =>
+        prev.map((t) =>
+          t.id === editingTransaction.id
+            ? {
+                ...t,
+                ...txData,
+                type: txData.type!,
+                personName: txData.personName!,
+                amount: txData.amount!,
+                paidAmount: txData.paidAmount ?? t.paidAmount,
+                category: txData.category!,
+              }
+            : t
+        )
+      );
+    } else {
+      // Create new transaction
+      const newTx: Transaction = {
+        id: `tx-${Date.now()}`,
+        personName: txData.personName!,
+        personPhone: txData.personPhone,
+        type: txData.type || 'for_me',
+        amount: txData.amount!,
+        paidAmount: txData.paidAmount || 0,
+        category: txData.category || 'personal',
+        createdAt: new Date().toISOString(),
+        dueDate: txData.dueDate,
+        notes: txData.notes,
+        settlements: txData.paidAmount
+          ? [
+              {
+                id: `st-init-${Date.now()}`,
+                amount: txData.paidAmount,
+                date: new Date().toISOString(),
+                note: 'دفعة أولية عند التسجيل',
+              },
+            ]
+          : [],
+      };
+      setTransactions((prev) => [newTx, ...prev]);
+    }
+  };
+
+  const handleDeleteTransaction = (id: string) => {
+    if (confirm('هل أنت تأكد من رغبتك في حذف هذه المعاملة؟')) {
+      setTransactions((prev) => prev.filter((t) => t.id !== id));
+    }
+  };
+
+  const handleDeletePerson = (personName: string) => {
+    if (confirm(`هل أنت تأكد من رغبتك في حذف حساب "${personName}" وجميع المعاملات والديون المرتبطة به؟`)) {
+      setTransactions((prev) =>
+        prev.filter(
+          (t) => t.personName.trim().toLowerCase() !== personName.trim().toLowerCase()
+        )
+      );
+      if (selectedPersonName?.trim().toLowerCase() === personName.trim().toLowerCase()) {
+        setSelectedPersonName(null);
+      }
+    }
+  };
+
+  const handleOpenSettlementModal = (tx: Transaction) => {
+    setSettlementTransaction(tx);
+    setIsSettlementModalOpen(true);
+  };
+
+  const handleAddSettlement = (
+    transactionId: string,
+    amount: number,
+    date: string,
+    note?: string
+  ) => {
+    setTransactions((prev) =>
+      prev.map((t) => {
+        if (t.id === transactionId) {
+          const newPaidAmount = t.paidAmount + amount;
+          const newSettlement = {
+            id: `st-${Date.now()}`,
+            amount,
+            date,
+            note,
+          };
+          return {
+            ...t,
+            paidAmount: newPaidAmount,
+            settlements: [newSettlement, ...(t.settlements || [])],
+          };
+        }
+        return t;
+      })
+    );
+  };
+
+  const handleRestoreData = (
+    restoredTransactions: Transaction[],
+    restoredSettings?: AppSettings
+  ) => {
+    setTransactions(restoredTransactions);
+    if (restoredSettings) {
+      setSettings(restoredSettings);
+    }
+  };
+
+  const handleResetData = () => {
+    if (confirm('هل ترغب في إعادة البيانات النموذجية الأولية؟ سيفقد ذلك أي تغييرات غير محفوظة في النسخة الاحتياطية.')) {
+      setTransactions(INITIAL_TRANSACTIONS);
+      setSettings(DEFAULT_SETTINGS);
+    }
+  };
+
+  const handleGoToTransactions = (filter: FilterTab = 'all') => {
+    setActiveFilterTab(filter);
+    setActiveTab('transactions');
+  };
+
+  const filteredPeopleForSearch = groupByPerson(transactions).filter((p) =>
+    p.personName.toLowerCase().includes(quickSearchTerm.toLowerCase())
+  );
+
+  return (
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 transition-colors selection:bg-[#F78B3D] selection:text-white">
+      
+      {/* PWA Installation & Offline Alert Banners */}
+      <PWAInstallBanner />
+
+      {/* Printable Area for PDF Statement generation */}
+      <ExportPrintStatement transactions={transactions} settings={settings} />
+
+      {/* App Navbar */}
+      <Navbar
+        settings={settings}
+        onUpdateSettings={handleUpdateSettings}
+        onOpenSearch={() => setIsSearchOpen(true)}
+        onExportExcel={() => exportToExcel(transactions, settings.currency)}
+        onExportPDF={triggerPDFPrint}
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+      />
+
+      {/* Main View Container */}
+      <main className="max-w-4xl mx-auto px-4 pt-5 pb-20">
+        {activeTab === 'dashboard' && (
+          <DashboardView
+            transactions={transactions}
+            settings={settings}
+            onOpenAddModal={handleOpenAddModal}
+            onOpenSettlementModal={handleOpenSettlementModal}
+            onSelectPerson={setSelectedPersonName}
+            onDeletePerson={handleDeletePerson}
+            onEditTransaction={handleOpenEditModal}
+            onDeleteTransaction={handleDeleteTransaction}
+            onGoToTransactions={handleGoToTransactions}
+          />
+        )}
+
+        {activeTab === 'transactions' && (
+          <TransactionsView
+            transactions={transactions}
+            settings={settings}
+            activeFilterTab={activeFilterTab}
+            setActiveFilterTab={setActiveFilterTab}
+            onOpenAddModal={handleOpenAddModal}
+            onOpenSettlementModal={handleOpenSettlementModal}
+            onEditTransaction={handleOpenEditModal}
+            onDeleteTransaction={handleDeleteTransaction}
+            onSelectPerson={setSelectedPersonName}
+            onDeletePerson={handleDeletePerson}
+          />
+        )}
+
+        {activeTab === 'statistics' && (
+          <StatisticsView
+            transactions={transactions}
+            settings={settings}
+            onSelectPerson={setSelectedPersonName}
+          />
+        )}
+
+        {activeTab === 'settings' && (
+          <SettingsView
+            settings={settings}
+            onUpdateSettings={handleUpdateSettings}
+            transactions={transactions}
+            onExportExcel={() => exportToExcel(transactions, settings.currency)}
+            onExportPDF={triggerPDFPrint}
+            onRestoreData={handleRestoreData}
+            onResetData={handleResetData}
+          />
+        )}
+      </main>
+
+      {/* Bottom Navigation Bar */}
+      <BottomNav
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        onOpenAddModal={() => handleOpenAddModal('for_me')}
+        unpaidCount={unpaidCount}
+      />
+
+      {/* Add / Edit Transaction Modal */}
+      <TransactionModal
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        onSave={handleSaveTransaction}
+        editingTransaction={editingTransaction}
+        defaultType={defaultAddType}
+        existingPeopleNames={existingPeopleNames}
+        settings={settings}
+      />
+
+      {/* Settlement / Partial Payment Modal */}
+      <SettlementModal
+        isOpen={isSettlementModalOpen}
+        onClose={() => setIsSettlementModalOpen(false)}
+        transaction={settlementTransaction}
+        onAddSettlement={handleAddSettlement}
+        settings={settings}
+      />
+
+      {/* Individual Person Statement Modal */}
+      <PersonDetailModal
+        isOpen={!!selectedPersonName}
+        onClose={() => setSelectedPersonName(null)}
+        personName={selectedPersonName}
+        transactions={transactions}
+        settings={settings}
+        onOpenSettlementModal={handleOpenSettlementModal}
+        onExportPDF={triggerPDFPrint}
+        onDeletePerson={handleDeletePerson}
+      />
+
+      {/* Quick Search Overlay Modal */}
+      {isSearchOpen && (
+        <div className="fixed inset-0 z-50 flex items-start justify-center pt-16 px-4 bg-slate-900/60 backdrop-blur-sm animate-fadeIn">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl w-full max-w-lg p-5 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="font-extrabold text-sm text-slate-900 dark:text-white">
+                البحث عن شخص أو جهة
+              </h3>
+              <button
+                onClick={() => setIsSearchOpen(false)}
+                className="p-1 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="relative">
+              <Search className="w-4 h-4 text-slate-400 absolute right-3.5 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                autoFocus
+                value={quickSearchTerm}
+                onChange={(e) => setQuickSearchTerm(e.target.value)}
+                placeholder="اكتب اسم الشخص..."
+                className="w-full pr-10 pl-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-[#F78B3D]"
+              />
+            </div>
+
+            <div className="max-h-60 overflow-y-auto space-y-2">
+              {filteredPeopleForSearch.length === 0 ? (
+                <p className="text-xs text-slate-400 text-center py-4">لم يتم العثور على نتائج.</p>
+              ) : (
+                filteredPeopleForSearch.map((person) => (
+                  <div
+                    key={person.personName}
+                    className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 hover:bg-[#F78B3D]/10 transition-all flex items-center justify-between text-xs"
+                  >
+                    <div 
+                      onClick={() => {
+                        setIsSearchOpen(false);
+                        setSelectedPersonName(person.personName);
+                      }}
+                      className="flex items-center gap-2 cursor-pointer flex-1"
+                    >
+                      <User className="w-4 h-4 text-[#F78B3D]" />
+                      <span className="font-bold text-slate-900 dark:text-white">{person.personName}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-extrabold text-[#F78B3D]">
+                        {person.transactionCount} معاملات
+                      </span>
+                      <PersonMenuDots
+                        personName={person.personName}
+                        onSelectPerson={(name) => {
+                          setIsSearchOpen(false);
+                          setSelectedPersonName(name);
+                        }}
+                        onDeletePerson={(name) => {
+                          setIsSearchOpen(false);
+                          handleDeletePerson(name);
+                        }}
+                        size="sm"
+                      />
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
-    <div class="danger-zone"><button class="reset-btn" onclick="resetAllData()">حذف جميع البيانات</button></div>
-  </div>
-</div>
-<div class="toast" id="toast">تم الحفظ</div>
-<script>
-const defaults=[];
-let data;
-try{data=JSON.parse(localStorage.getItem("accountsDataMobileFinalV2"))||defaults}catch(e){data=[...defaults]}
-data=data.map(x=>({...x,type:x.type==="عليه"?"alih":x.type}));
-let nextId=parseInt(localStorage.getItem("nextIdMobileFinalV2"),10)||Math.max(0,...data.map(x=>x.id))+1;
-const englishDigits=value=>String(value).replace(/[٠-٩]/g,d=>"0123456789"["٠١٢٣٤٥٦٧٨٩".indexOf(d)]).replace(/[۰-۹]/g,d=>"0123456789"["۰۱۲۳۴۵۶۷۸۹".indexOf(d)]);
-const numberValue=value=>parseFloat(englishDigits(value).replace(/,/g,""))||0;
-const money=value=>new Intl.NumberFormat("en-US",{maximumFractionDigits:2}).format(Number(value)||0);
-const safe=value=>String(value??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-let toastTimer;
-function notify(){const t=document.getElementById("toast");t.classList.add("show");clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove("show"),1100)}
-function save(show=false){localStorage.setItem("accountsDataMobileFinalV2",JSON.stringify(data));localStorage.setItem("nextIdMobileFinalV2",String(nextId));if(show)notify()}
-function itemHtml(item){const rem=numberValue(item.total)-numberValue(item.paid);return `<article class="account" data-id="${item.id}">
-<div class="cell name-cell"><label>الاسم / البيان</label><div class="name-box"><span class="name-dot"></span><input class="field name-field" type="text" value="${safe(item.name)}" oninput="update(${item.id},'name',this.value)"></div></div>
-<div class="cell"><label>الإجمالي</label><input class="field money-field" type="text" inputmode="decimal" dir="ltr" value="${item.total||''}" placeholder="0" oninput="update(${item.id},'total',this.value,this)"></div>
-<div class="cell"><label>المدفوع</label><input class="field money-field" type="text" inputmode="decimal" dir="ltr" value="${item.paid||''}" placeholder="0" oninput="update(${item.id},'paid',this.value,this)"></div>
-<div class="cell"><label>المتبقي</label><div class="remaining">${money(rem)}</div></div>
-<div class="cell action-cell"><label>الإجراء</label><div class="actions"><select class="type" onchange="changeType(${item.id},this.value)"><option value="liya" ${item.type==='liya'?'selected':''}>لي</option><option value="alih" ${item.type==='alih'?'selected':''}>عليّ</option></select><button class="delete" onclick="removeItem(${item.id})">✕</button></div></div>
-</article>`}
-function render(){const q=document.getElementById("search").value.trim().toLowerCase();const filtered=data.filter(x=>String(x.name).toLowerCase().includes(q));const liya=filtered.filter(x=>x.type==='liya');const alih=filtered.filter(x=>x.type!=='liya');document.getElementById("listLiya").innerHTML=liya.length?liya.map(itemHtml).join(""):'<div class="empty">لا توجد بنود</div>';document.getElementById("listAlih").innerHTML=alih.length?alih.map(itemHtml).join(""):'<div class="empty">لا توجد بنود</div>';document.getElementById("countLiya").textContent=`${liya.length} بند`;document.getElementById("countAlih").textContent=`${alih.length} بند`;totals()}
-function update(id,field,value,input){const item=data.find(x=>x.id===id);if(!item)return;if(field==='name'){item.name=value}else{const converted=englishDigits(value);item[field]=numberValue(converted);if(input&&converted!==value)input.value=converted}save();totals()}
-function totals(){let liya=0,alih=0;data.forEach(item=>{const rem=numberValue(item.total)-numberValue(item.paid);item.type==='liya'?liya+=rem:alih+=rem;const el=document.querySelector(`[data-id="${item.id}"] .remaining`);if(el)el.textContent=money(rem)});document.getElementById("sumLiya").textContent=money(liya);document.getElementById("sumAlih").textContent=money(alih)}
-function changeType(id,type){const item=data.find(x=>x.id===id);if(item){item.type=type;save(true);render()}}
-function removeItem(id){const item=data.find(x=>x.id===id);if(item&&confirm(`حذف «${item.name||'بدون اسم'}»؟`)){data=data.filter(x=>x.id!==id);save(true);render()}}
-function addItem(){const item={id:nextId++,name:"",type:"liya",total:0,paid:0};data.unshift(item);save(true);document.getElementById("search").value="";render();setTimeout(()=>document.querySelector(`[data-id="${item.id}"] .name-field`)?.focus(),50)}
-function backupPayload(){return JSON.stringify({app:"Hesabaty",version:1,createdAt:new Date().toISOString(),nextId,data},null,2)}
-function openBackup(){document.getElementById("backupText").value=backupPayload();document.getElementById("backupModal").classList.add("show")}
-function closeBackup(){document.getElementById("backupModal").classList.remove("show")}
-function copyBackup(){const area=document.getElementById("backupText");area.value=backupPayload();area.focus();area.select();try{document.execCommand("copy");notify()}catch(e){alert("حدد النص وانسخه يدويًا")}}
-function downloadBackup(){const content=backupPayload();const blob=new Blob([content],{type:"application/json;charset=utf-8"});const url=URL.createObjectURL(blob);const link=document.createElement("a");link.href=url;link.download=`hesabaty-backup-${new Date().toISOString().slice(0,10)}.json`;document.body.appendChild(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),1000)}
-function applyBackup(raw){let parsed;try{parsed=JSON.parse(raw)}catch(e){alert("نص النسخة الاحتياطية غير صحيح");return}if(!parsed||!Array.isArray(parsed.data)){alert("ملف النسخة الاحتياطية غير صالح");return}if(!confirm("سيتم استبدال البيانات الحالية بالنسخة الاحتياطية. متابعة؟"))return;data=parsed.data.map(x=>({id:Number(x.id),name:String(x.name||""),type:x.type==="liya"?"liya":"alih",total:numberValue(x.total),paid:numberValue(x.paid)}));nextId=Number(parsed.nextId)||Math.max(0,...data.map(x=>x.id))+1;save(true);closeBackup();render()}
-function restoreBackup(){applyBackup(document.getElementById("backupText").value.trim())}
-function restoreFile(input){const file=input.files&&input.files[0];if(!file)return;const reader=new FileReader();reader.onload=()=>applyBackup(String(reader.result||""));reader.onerror=()=>alert("تعذر قراءة الملف");reader.readAsText(file,"UTF-8");input.value=""}
-function resetAllData(){if(confirm("هل تريد حذف جميع الأسماء والأرقام نهائيًا؟")){data=[];nextId=1;save(true);closeBackup();render()}}
-function clearSearch(){document.getElementById("search").value="";render()}
-render();
-</script>
-</body>
-</html>
+  );
+}
