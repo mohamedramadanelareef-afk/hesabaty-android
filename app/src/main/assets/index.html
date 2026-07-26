@@ -1,314 +1,105 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>إدارة الحسابات الشاملة</title>
-    <style>
-        :root {
-            --primary-color: #1b365d;
-            --success-color: #27ae60;
-            --danger-color: #c0392b;
-            --bg-color: #f4f6f9;
-            --card-bg: #ffffff;
-            --border-color: #dcdde1;
-            --text-main: #333333;
-            --text-muted: #7f8c8d;
-        }
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--bg-color);
-            margin: 0;
-            padding: 4px;
-            color: var(--text-main);
-        }
-        .container {
-            width: 100%;
-            margin: 0;
-            background: var(--card-bg);
-            padding: 8px;
-            border-radius: 4px;
-            box-sizing: border-box;
-        }
-        .header-title {
-            text-align: center;
-            color: var(--primary-color);
-            margin-bottom: 2px;
-            font-size: 18px;
-        }
-        .header-subtitle {
-            text-align: center;
-            color: var(--text-muted);
-            margin-bottom: 10px;
-            font-size: 11px;
-        }
-        .summary-cards {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 6px;
-            margin-bottom: 10px;
-        }
-        .card {
-            background: #fff;
-            padding: 8px 4px;
-            border-radius: 5px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-            border-top: 3px solid var(--primary-color);
-            text-align: center;
-        }
-        .card.liya { border-top-color: var(--success-color); }
-        .card.عليه { border-top-color: var(--danger-color); }
-        .card h4 {
-            margin: 0 0 3px 0;
-            font-size: 10px;
-            color: #555;
-        }
-        .card .amount {
-            font-size: 14px;
-            font-weight: bold;
-            color: #222;
-        }
-        .section-title {
-            font-size: 13px;
-            font-weight: bold;
-            margin: 10px 0 5px 0;
-            padding-bottom: 3px;
-            border-bottom: 2px solid #eee;
-        }
-        .section-title.liya { color: var(--success-color); border-bottom-color: var(--success-color); }
-        .section-title.عليه { color: var(--danger-color); border-bottom-color: var(--danger-color); }
-
-        .table-responsive {
-            width: 100%;
-            overflow-x: auto;
-            margin-bottom: 10px;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            min-width: 100%;
-        }
-        th, td {
-            border: 1px solid var(--border-color);
-            padding: 5px 3px;
-            text-align: center;
-            font-size: 11px;
-        }
-        th {
-            background-color: var(--primary-color);
-            color: white;
-            font-size: 10px;
-        }
-        tr:nth-child(even) {
-            background-color: #f8f9fa;
-        }
-        input[type="text"], input[type="number"], select {
-            width: 100%;
-            padding: 4px;
-            box-sizing: border-box;
-            border: 1px solid #ccc;
-            border-radius: 3px;
-            text-align: center;
-            font-size: 11px;
-        }
-        select {
-            background-color: #fff;
-            cursor: pointer;
-            padding: 2px;
-        }
-        button.delete-btn {
-            background-color: var(--danger-color);
-            color: white;
-            border: none;
-            padding: 4px 6px;
-            border-radius: 3px;
-            cursor: pointer;
-            font-size: 10px;
-        }
-        .add-btn {
-            background-color: var(--success-color);
-            color: white;
-            border: none;
-            width: 100%;
-            padding: 8px;
-            font-size: 13px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: bold;
-            margin-top: 8px;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0f172a">
+  <title>حساباتي</title>
+  <style>
+    :root{
+      --bg:#f1f5f9;--card:#fff;--text:#0f172a;--muted:#64748b;--border:#e2e8f0;
+      --primary:#2563eb;--green:#16a34a;--green-soft:#f0fdf4;--green-border:#86efac;
+      --red:#dc2626;--red-soft:#fef2f2;--red-border:#fca5a5;--shadow:0 7px 22px rgba(15,23,42,.07)
+    }
+    *{box-sizing:border-box}
+    body{margin:0;min-height:100vh;background:var(--bg);color:var(--text);font-family:"Segoe UI",Tahoma,Arial,sans-serif}
+    button,input,select{font:inherit}
+    .app{width:min(100%,900px);margin:auto;padding:12px 10px 80px}
+    .hero{background:linear-gradient(135deg,#0f172a,#1e3a8a);color:#fff;border-radius:18px;padding:20px 17px;box-shadow:var(--shadow)}
+    .hero-row{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+    .hero h1{margin:0 0 5px;font-size:27px}.hero p{margin:0;color:#cbd5e1;font-size:12px;line-height:1.7}
+    .saved{display:flex;align-items:center;gap:7px;white-space:nowrap;padding:7px 9px;border:1px solid rgba(255,255,255,.15);border-radius:999px;background:rgba(255,255,255,.1);font-size:11px}
+    .dot{width:8px;height:8px;border-radius:50%;background:#4ade80}
+    .summary{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:11px 0}
+    .stat{background:#fff;border:1px solid var(--border);border-radius:15px;padding:14px;box-shadow:0 3px 12px rgba(15,23,42,.04)}
+    .stat-label{font-size:11px;color:var(--muted);margin-bottom:7px}.stat-value{direction:ltr;text-align:right;font-size:22px;font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .stat.green .stat-value{color:var(--green)}.stat.red .stat-value{color:var(--red)}.currency{font-size:10px;color:var(--muted);margin-right:4px}
+    .toolbar{position:sticky;top:5px;z-index:5;display:grid;grid-template-columns:1fr auto auto;gap:7px;background:#fff;border:1px solid var(--border);border-radius:14px;padding:8px;box-shadow:var(--shadow)}
+    .search{width:100%;height:42px;border:1px solid var(--border);border-radius:10px;background:#f8fafc;padding:0 12px;outline:none}
+    .search:focus{border-color:#93c5fd;box-shadow:0 0 0 3px #dbeafe}
+    .btn{height:42px;border:0;border-radius:10px;padding:0 13px;font-weight:700;cursor:pointer}.add{background:var(--primary);color:#fff}.clear{background:#eef2ff;color:#3730a3}
+    .section{margin:11px 0;background:#fff;border:1px solid var(--border);border-radius:16px;overflow:hidden;box-shadow:0 4px 15px rgba(15,23,42,.04)}
+    .section-head{display:flex;align-items:center;justify-content:space-between;padding:13px 14px;border-bottom:1px solid var(--border)}
+    .section-title{display:flex;align-items:center;gap:8px}.section-title span{width:5px;height:24px;border-radius:9px}.receivable .section-title span{background:var(--green)}.payable .section-title span{background:var(--red)}
+    h2{font-size:15px;margin:0}.badge{font-size:11px;color:var(--muted);background:#f8fafc;border:1px solid var(--border);border-radius:999px;padding:4px 8px}
+    .list{display:grid;gap:9px;padding:8px}
+    .account{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;background:#fff;border:1px solid var(--border);border-radius:14px;padding:8px;box-shadow:0 2px 9px rgba(15,23,42,.04)}
+    .cell{display:flex;flex-direction:column;gap:4px;min-width:0}.cell label{font-size:10px;color:var(--muted);font-weight:700;padding-right:2px}
+    .name-cell{grid-column:1/-1;padding-left:30%}.action-cell{grid-column:1/-1;border-top:1px solid #edf2f7;padding-top:9px;margin-top:2px}
+    .name-box{display:flex;align-items:center;gap:7px;border:1.5px solid;border-radius:9px;padding:2px 7px;min-height:38px}.name-dot{width:9px;height:9px;border-radius:50%;flex:0 0 auto}
+    .receivable .name-box{border-color:var(--green-border);background:var(--green-soft)}.receivable .name-dot{background:var(--green)}
+    .payable .name-box{border-color:var(--red-border);background:var(--red-soft)}.payable .name-dot{background:var(--red)}
+    .field{width:100%;height:38px;border:1.5px solid;border-radius:9px;padding:0 5px;outline:none;text-align:center;direction:ltr;font-size:13px;font-variant-numeric:tabular-nums;background:#fff}
+    .name-field{border:0!important;background:transparent!important;box-shadow:none!important;text-align:right;direction:rtl;font-size:14px;padding-right:2px}
+    .receivable .money-field,.receivable .remaining{border-color:var(--green-border);background:var(--green-soft)}
+    .payable .money-field,.payable .remaining{border-color:var(--red-border);background:var(--red-soft)}
+    .field:focus{background:#fff!important;box-shadow:0 0 0 3px #dbeafe}.remaining{height:38px;border:1.5px solid;border-radius:9px;display:flex;align-items:center;justify-content:center;direction:ltr;font-size:13px;font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .actions{display:flex;gap:7px}.type{height:38px;flex:1;border:1px solid var(--border);border-radius:9px;background:#fff;padding:0 7px}.delete{height:38px;width:45px;border:0;border-radius:9px;background:var(--red-soft);color:var(--red);font-weight:800;cursor:pointer}
+    .empty{text-align:center;padding:25px;color:var(--muted);font-size:13px}.footer{text-align:center;color:var(--muted);font-size:11px;line-height:1.6;padding:5px 20px}
+    .toast{position:fixed;left:50%;bottom:20px;transform:translate(-50%,80px);opacity:0;background:#0f172a;color:#fff;padding:10px 15px;border-radius:11px;transition:.25s;z-index:10;font-size:12px}.toast.show{transform:translate(-50%,0);opacity:1}
+    @media(max-width:390px){.hero p{display:none}.saved{font-size:0}.saved:after{content:"محفوظ";font-size:10px}.summary{grid-template-columns:1fr}.stat{display:flex;align-items:center;justify-content:space-between}.stat-label{margin:0}.stat-value{font-size:19px}.toolbar{grid-template-columns:1fr auto}.clear{display:none}.name-cell{padding-left:18%}.field,.remaining{font-size:12px;padding-left:2px;padding-right:2px}}
+  </style>
 </head>
 <body>
-
-<div class="container">
-    <h2 class="header-title">متابعة الحسابات الشاملة</h2>
-    <div class="header-subtitle">حفظ تلقائي • مخصص للموبايل</div>
-    
-    <div class="summary-cards">
-        <div class="card liya">
-            <h4>فلوس لـي</h4>
-            <div class="amount" id="sumNetLiya" style="color: var(--success-color);">0</div>
-        </div>
-        <div class="card عليه">
-            <h4>فلوس عـليّ</h4>
-            <div class="amount" id="sumNetAlih" style="color: var(--danger-color);">0</div>
-        </div>
-    </div>
-
-    <div class="section-title liya"><span>فلوس لــي</span></div>
-    <div class="table-responsive">
-        <table>
-            <thead>
-                <tr>
-                    <th style="width: 32%;">البيان</th>
-                    <th style="width: 18%;">الإجمالي</th>
-                    <th style="width: 18%;">المدفوع</th>
-                    <th style="width: 18%;">المتبقي</th>
-                    <th style="width: 14%;">إجراء</th>
-                </tr>
-            </thead>
-            <tbody id="tableLiya"></tbody>
-        </table>
-    </div>
-
-    <div class="section-title عليه"><span>فلوس عـليّ</span></div>
-    <div class="table-responsive">
-        <table>
-            <thead>
-                <tr>
-                    <th style="width: 32%;">البيان</th>
-                    <th style="width: 18%;">الإجمالي</th>
-                    <th style="width: 18%;">المدفوع</th>
-                    <th style="width: 18%;">المتبقي</th>
-                    <th style="width: 14%;">إجراء</th>
-                </tr>
-            </thead>
-            <tbody id="tableAlih"></tbody>
-        </table>
-    </div>
-
-    <button class="add-btn" onclick="addRow()">+ إضافة بند جديد</button>
-</div>
-
+<main class="app">
+  <header class="hero"><div class="hero-row"><div><h1>حساباتي</h1><p>متابعة المبالغ والمدفوعات بسهولة، مع حفظ تلقائي على الهاتف.</p></div><div class="saved"><span class="dot"></span>حفظ تلقائي</div></div></header>
+  <section class="summary">
+    <article class="stat green"><div class="stat-label">إجمالي مستحق لي</div><div class="stat-value"><span id="sumLiya">0</span><span class="currency">ج.م</span></div></article>
+    <article class="stat red"><div class="stat-label">إجمالي مستحق عليّ</div><div class="stat-value"><span id="sumAlih">0</span><span class="currency">ج.م</span></div></article>
+  </section>
+  <div class="toolbar"><input id="search" class="search" type="search" placeholder="البحث بالاسم..." oninput="render()"><button class="btn clear" onclick="clearSearch()">مسح</button><button class="btn add" onclick="addItem()">＋ إضافة</button></div>
+  <section class="section receivable"><div class="section-head"><div class="section-title"><span></span><h2>مبالغ مستحقة لي</h2></div><div class="badge" id="countLiya">0 بند</div></div><div class="list" id="listLiya"></div></section>
+  <section class="section payable"><div class="section-head"><div class="section-title"><span></span><h2>مبالغ مستحقة عليّ</h2></div><div class="badge" id="countAlih">0 بند</div></div><div class="list" id="listAlih"></div></section>
+  <div class="footer">البيانات محفوظة محليًا داخل التطبيق ولا يتم إرسالها إلى أي جهة.</div>
+</main>
+<div class="toast" id="toast">تم الحفظ</div>
 <script>
-    let defaultData = [
-        { id: 1, name: "محمد الصباغ", type: "liya", total: 1000, paid: 0 },
-        { id: 2, name: "ابتسام", type: "عليه", total: 20000, paid: 0 },
-        { id: 3, name: "اسامه الشريف", type: "عليه", total: 10000, paid: 0 },
-        { id: 4, name: "ايمان طلعت", type: "عليه", total: 10000, paid: 0 },
-        { id: 5, name: "السيراميك", type: "عليه", total: 11000, paid: 0 },
-        { id: 6, name: "محمد ابوموسي", type: "عليه", total: 10000, paid: 0 },
-        { id: 7, name: "عمي طلعت", type: "عليه", total: 103000, paid: 0 },
-        { id: 8, name: "خال هدير", type: "عليه", total: 2500, paid: 0 }
-    ];
-
-    let initialData = JSON.parse(localStorage.getItem('accountsDataMobileFinalV2')) || defaultData;
-    let nextId = parseInt(localStorage.getItem('nextIdMobileFinalV2')) || 9;
-
-    function saveToLocalStorage() {
-        localStorage.setItem('accountsDataMobileFinalV2', JSON.stringify(initialData));
-        localStorage.setItem('nextIdMobileFinalV2', nextId);
-    }
-
-    function renderTables() {
-        const tbodyLiya = document.getElementById('tableLiya');
-        const tbodyAlih = document.getElementById('tableAlih');
-        
-        tbodyLiya.innerHTML = '';
-        tbodyAlih.innerHTML = '';
-
-        initialData.forEach((item) => {
-            let row = document.createElement('tr');
-            row.setAttribute('data-id', item.id);
-            row.innerHTML = `
-                <td><input type="text" value="${item.name}" oninput="updateData(${item.id}, 'name', this.value)"></td>
-                <td><input type="number" value="${item.total || ''}" placeholder="0" oninput="updateData(${item.id}, 'total', this.value)"></td>
-                <td><input type="number" value="${item.paid || ''}" placeholder="0" oninput="updateData(${item.id}, 'paid', this.value)"></td>
-                <td class="remaining-cell" style="font-weight: bold; font-size: 11px;">0</td>
-                <td>
-                    <select onchange="updateType(${item.id}, this.value)">
-                        <option value="liya" ${item.type === 'liya' ? 'selected' : ''}>لي</option>
-                        <option value="عليه" ${item.type === 'عليه' ? 'selected' : ''}>علي</option>
-                    </select>
-                    <button class="delete-btn" onclick="deleteRow(${item.id})" style="margin-top:2px;">حذف</button>
-                </td>
-            `;
-
-            if (item.type === 'liya') {
-                tbodyLiya.appendChild(row);
-            } else {
-                tbodyAlih.appendChild(row);
-            }
-        });
-
-        calculateTotals();
-    }
-
-    function updateData(id, field, value) {
-        let item = initialData.find(x => x.id === id);
-        if (!item) return;
-
-        if (field === 'name') {
-            item[field] = value;
-        } else {
-            item[field] = parseFloat(value) || 0;
-        }
-        
-        saveToLocalStorage();
-        calculateTotals();
-    }
-
-    function calculateTotals() {
-        let totalNetLiya = 0;
-        let totalNetAlih = 0;
-
-        initialData.forEach((item) => {
-            let remaining = (item.total || 0) - (item.paid || 0);
-            
-            if (item.type === 'liya') {
-                totalNetLiya += remaining;
-            } else {
-                totalNetAlih += remaining;
-            }
-
-            let row = document.querySelector(`tr[data-id="${item.id}"]`);
-            if (row) {
-                let remainingCell = row.querySelector('.remaining-cell');
-                if (remainingCell) {
-                    remainingCell.innerText = remaining.toLocaleString();
-                    remainingCell.style.color = remaining < 0 ? '#c0392b' : '#2c3e50';
-                }
-            }
-        });
-
-        document.getElementById('sumNetLiya').innerText = totalNetLiya.toLocaleString();
-        document.getElementById('sumNetAlih').innerText = totalNetAlih.toLocaleString();
-    }
-
-    function updateType(id, newType) {
-        let item = initialData.find(x => x.id === id);
-        if (item) {
-            item.type = newType;
-            saveToLocalStorage();
-            renderTables();
-        }
-    }
-
-    function deleteRow(id) {
-        initialData = initialData.filter(x => x.id !== id);
-        saveToLocalStorage();
-        renderTables();
-    }
-
-    function addRow() {
-        initialData.push({ id: nextId++, name: "جديد", type: "liya", total: 0, paid: 0 });
-        saveToLocalStorage();
-        renderTables();
-    }
-
-    renderTables();
+const defaults=[
+{id:1,name:"محمد الصباغ",type:"liya",total:1000,paid:0},
+{id:2,name:"ابتسام",type:"alih",total:20000,paid:0},
+{id:3,name:"اسامه الشريف",type:"alih",total:10000,paid:0},
+{id:4,name:"ايمان طلعت",type:"alih",total:10000,paid:0},
+{id:5,name:"السيراميك",type:"alih",total:11000,paid:0},
+{id:6,name:"محمد ابوموسي",type:"alih",total:10000,paid:0},
+{id:7,name:"عمي طلعت",type:"alih",total:103000,paid:0},
+{id:8,name:"خال هدير",type:"alih",total:2500,paid:0}
+];
+let data;
+try{data=JSON.parse(localStorage.getItem("accountsDataMobileFinalV2"))||defaults}catch(e){data=[...defaults]}
+data=data.map(x=>({...x,type:x.type==="عليه"?"alih":x.type}));
+let nextId=parseInt(localStorage.getItem("nextIdMobileFinalV2"),10)||Math.max(0,...data.map(x=>x.id))+1;
+const englishDigits=value=>String(value).replace(/[٠-٩]/g,d=>"0123456789"["٠١٢٣٤٥٦٧٨٩".indexOf(d)]).replace(/[۰-۹]/g,d=>"0123456789"["۰۱۲۳۴۵۶۷۸۹".indexOf(d)]);
+const numberValue=value=>parseFloat(englishDigits(value).replace(/,/g,""))||0;
+const money=value=>new Intl.NumberFormat("en-US",{maximumFractionDigits:2}).format(Number(value)||0);
+const safe=value=>String(value??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+let toastTimer;
+function notify(){const t=document.getElementById("toast");t.classList.add("show");clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove("show"),1100)}
+function save(show=false){localStorage.setItem("accountsDataMobileFinalV2",JSON.stringify(data));localStorage.setItem("nextIdMobileFinalV2",String(nextId));if(show)notify()}
+function itemHtml(item){const rem=numberValue(item.total)-numberValue(item.paid);return `<article class="account" data-id="${item.id}">
+<div class="cell name-cell"><label>الاسم / البيان</label><div class="name-box"><span class="name-dot"></span><input class="field name-field" type="text" value="${safe(item.name)}" oninput="update(${item.id},'name',this.value)"></div></div>
+<div class="cell"><label>الإجمالي</label><input class="field money-field" type="text" inputmode="decimal" dir="ltr" value="${item.total||''}" placeholder="0" oninput="update(${item.id},'total',this.value,this)"></div>
+<div class="cell"><label>المدفوع</label><input class="field money-field" type="text" inputmode="decimal" dir="ltr" value="${item.paid||''}" placeholder="0" oninput="update(${item.id},'paid',this.value,this)"></div>
+<div class="cell"><label>المتبقي</label><div class="remaining">${money(rem)}</div></div>
+<div class="cell action-cell"><label>الإجراء</label><div class="actions"><select class="type" onchange="changeType(${item.id},this.value)"><option value="liya" ${item.type==='liya'?'selected':''}>لي</option><option value="alih" ${item.type==='alih'?'selected':''}>عليّ</option></select><button class="delete" onclick="removeItem(${item.id})">✕</button></div></div>
+</article>`}
+function render(){const q=document.getElementById("search").value.trim().toLowerCase();const filtered=data.filter(x=>String(x.name).toLowerCase().includes(q));const liya=filtered.filter(x=>x.type==='liya');const alih=filtered.filter(x=>x.type!=='liya');document.getElementById("listLiya").innerHTML=liya.length?liya.map(itemHtml).join(""):'<div class="empty">لا توجد بنود</div>';document.getElementById("listAlih").innerHTML=alih.length?alih.map(itemHtml).join(""):'<div class="empty">لا توجد بنود</div>';document.getElementById("countLiya").textContent=`${liya.length} بند`;document.getElementById("countAlih").textContent=`${alih.length} بند`;totals()}
+function update(id,field,value,input){const item=data.find(x=>x.id===id);if(!item)return;if(field==='name'){item.name=value}else{const converted=englishDigits(value);item[field]=numberValue(converted);if(input&&converted!==value)input.value=converted}save();totals()}
+function totals(){let liya=0,alih=0;data.forEach(item=>{const rem=numberValue(item.total)-numberValue(item.paid);item.type==='liya'?liya+=rem:alih+=rem;const el=document.querySelector(`[data-id="${item.id}"] .remaining`);if(el)el.textContent=money(rem)});document.getElementById("sumLiya").textContent=money(liya);document.getElementById("sumAlih").textContent=money(alih)}
+function changeType(id,type){const item=data.find(x=>x.id===id);if(item){item.type=type;save(true);render()}}
+function removeItem(id){const item=data.find(x=>x.id===id);if(item&&confirm(`حذف «${item.name||'بدون اسم'}»؟`)){data=data.filter(x=>x.id!==id);save(true);render()}}
+function addItem(){const item={id:nextId++,name:"",type:"liya",total:0,paid:0};data.unshift(item);save(true);document.getElementById("search").value="";render();setTimeout(()=>document.querySelector(`[data-id="${item.id}"] .name-field`)?.focus(),50)}
+function clearSearch(){document.getElementById("search").value="";render()}
+render();
 </script>
-
 </body>
 </html>
