@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>إدارة الحسابات الشاملة</title>
+    <style>
+        :root {
+            --primary-color: #1b365d;
+            --success-color: #27ae60;
+            --danger-color: #c0392b;
+            --bg-color: #f4f6f9;
+            --card-bg: #ffffff;
+            --border-color: #dcdde1;
+            --text-main: #333333;
+            --text-muted: #7f8c8d;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 4px;
+            color: var(--text-main);
+        }
+        .container {
+            width: 100%;
+            margin: 0;
+            background: var(--card-bg);
+            padding: 8px;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        .header-title {
+            text-align: center;
+            color: var(--primary-color);
+            margin-bottom: 2px;
+            font-size: 18px;
+        }
+        .header-subtitle {
+            text-align: center;
+            color: var(--text-muted);
+            margin-bottom: 10px;
+            font-size: 11px;
+        }
+        .summary-cards {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+            margin-bottom: 10px;
+        }
+        .card {
+            background: #fff;
+            padding: 8px 4px;
+            border-radius: 5px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            border-top: 3px solid var(--primary-color);
+            text-align: center;
+        }
+        .card.liya { border-top-color: var(--success-color); }
+        .card.عليه { border-top-color: var(--danger-color); }
+        .card h4 {
+            margin: 0 0 3px 0;
+            font-size: 10px;
+            color: #555;
+        }
+        .card .amount {
+            font-size: 14px;
+            font-weight: bold;
+            color: #222;
+        }
+        .section-title {
+            font-size: 13px;
+            font-weight: bold;
+            margin: 10px 0 5px 0;
+            padding-bottom: 3px;
+            border-bottom: 2px solid #eee;
+        }
+        .section-title.liya { color: var(--success-color); border-bottom-color: var(--success-color); }
+        .section-title.عليه { color: var(--danger-color); border-bottom-color: var(--danger-color); }
+
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+            margin-bottom: 10px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 100%;
+        }
+        th, td {
+            border: 1px solid var(--border-color);
+            padding: 5px 3px;
+            text-align: center;
+            font-size: 11px;
+        }
+        th {
+            background-color: var(--primary-color);
+            color: white;
+            font-size: 10px;
+        }
+        tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+        input[type="text"], input[type="number"], select {
+            width: 100%;
+            padding: 4px;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            text-align: center;
+            font-size: 11px;
+        }
+        select {
+            background-color: #fff;
+            cursor: pointer;
+            padding: 2px;
+        }
+        button.delete-btn {
+            background-color: var(--danger-color);
+            color: white;
+            border: none;
+            padding: 4px 6px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 10px;
+        }
+        .add-btn {
+            background-color: var(--success-color);
+            color: white;
+            border: none;
+            width: 100%;
+            padding: 8px;
+            font-size: 13px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 8px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2 class="header-title">متابعة الحسابات الشاملة</h2>
+    <div class="header-subtitle">حفظ تلقائي • مخصص للموبايل</div>
+    
+    <div class="summary-cards">
+        <div class="card liya">
+            <h4>فلوس لـي</h4>
+            <div class="amount" id="sumNetLiya" style="color: var(--success-color);">0</div>
+        </div>
+        <div class="card عليه">
+            <h4>فلوس عـليّ</h4>
+            <div class="amount" id="sumNetAlih" style="color: var(--danger-color);">0</div>
+        </div>
+    </div>
+
+    <div class="section-title liya"><span>فلوس لــي</span></div>
+    <div class="table-responsive">
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 32%;">البيان</th>
+                    <th style="width: 18%;">الإجمالي</th>
+                    <th style="width: 18%;">المدفوع</th>
+                    <th style="width: 18%;">المتبقي</th>
+                    <th style="width: 14%;">إجراء</th>
+                </tr>
+            </thead>
+            <tbody id="tableLiya"></tbody>
+        </table>
+    </div>
+
+    <div class="section-title عليه"><span>فلوس عـليّ</span></div>
+    <div class="table-responsive">
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 32%;">البيان</th>
+                    <th style="width: 18%;">الإجمالي</th>
+                    <th style="width: 18%;">المدفوع</th>
+                    <th style="width: 18%;">المتبقي</th>
+                    <th style="width: 14%;">إجراء</th>
+                </tr>
+            </thead>
+            <tbody id="tableAlih"></tbody>
+        </table>
+    </div>
+
+    <button class="add-btn" onclick="addRow()">+ إضافة بند جديد</button>
+</div>
+
+<script>
+    let defaultData = [
+        { id: 1, name: "محمد الصباغ", type: "liya", total: 1000, paid: 0 },
+        { id: 2, name: "ابتسام", type: "عليه", total: 20000, paid: 0 },
+        { id: 3, name: "اسامه الشريف", type: "عليه", total: 10000, paid: 0 },
+        { id: 4, name: "ايمان طلعت", type: "عليه", total: 10000, paid: 0 },
+        { id: 5, name: "السيراميك", type: "عليه", total: 11000, paid: 0 },
+        { id: 6, name: "محمد ابوموسي", type: "عليه", total: 10000, paid: 0 },
+        { id: 7, name: "عمي طلعت", type: "عليه", total: 103000, paid: 0 },
+        { id: 8, name: "خال هدير", type: "عليه", total: 2500, paid: 0 }
+    ];
+
+    let initialData = JSON.parse(localStorage.getItem('accountsDataMobileFinalV2')) || defaultData;
+    let nextId = parseInt(localStorage.getItem('nextIdMobileFinalV2')) || 9;
+
+    function saveToLocalStorage() {
+        localStorage.setItem('accountsDataMobileFinalV2', JSON.stringify(initialData));
+        localStorage.setItem('nextIdMobileFinalV2', nextId);
+    }
+
+    function renderTables() {
+        const tbodyLiya = document.getElementById('tableLiya');
+        const tbodyAlih = document.getElementById('tableAlih');
+        
+        tbodyLiya.innerHTML = '';
+        tbodyAlih.innerHTML = '';
+
+        initialData.forEach((item) => {
+            let row = document.createElement('tr');
+            row.setAttribute('data-id', item.id);
+            row.innerHTML = `
+                <td><input type="text" value="${item.name}" oninput="updateData(${item.id}, 'name', this.value)"></td>
+                <td><input type="number" value="${item.total || ''}" placeholder="0" oninput="updateData(${item.id}, 'total', this.value)"></td>
+                <td><input type="number" value="${item.paid || ''}" placeholder="0" oninput="updateData(${item.id}, 'paid', this.value)"></td>
+                <td class="remaining-cell" style="font-weight: bold; font-size: 11px;">0</td>
+                <td>
+                    <select onchange="updateType(${item.id}, this.value)">
+                        <option value="liya" ${item.type === 'liya' ? 'selected' : ''}>لي</option>
+                        <option value="عليه" ${item.type === 'عليه' ? 'selected' : ''}>علي</option>
+                    </select>
+                    <button class="delete-btn" onclick="deleteRow(${item.id})" style="margin-top:2px;">حذف</button>
+                </td>
+            `;
+
+            if (item.type === 'liya') {
+                tbodyLiya.appendChild(row);
+            } else {
+                tbodyAlih.appendChild(row);
+            }
+        });
+
+        calculateTotals();
+    }
+
+    function updateData(id, field, value) {
+        let item = initialData.find(x => x.id === id);
+        if (!item) return;
+
+        if (field === 'name') {
+            item[field] = value;
+        } else {
+            item[field] = parseFloat(value) || 0;
+        }
+        
+        saveToLocalStorage();
+        calculateTotals();
+    }
+
+    function calculateTotals() {
+        let totalNetLiya = 0;
+        let totalNetAlih = 0;
+
+        initialData.forEach((item) => {
+            let remaining = (item.total || 0) - (item.paid || 0);
+            
+            if (item.type === 'liya') {
+                totalNetLiya += remaining;
+            } else {
+                totalNetAlih += remaining;
+            }
+
+            let row = document.querySelector(`tr[data-id="${item.id}"]`);
+            if (row) {
+                let remainingCell = row.querySelector('.remaining-cell');
+                if (remainingCell) {
+                    remainingCell.innerText = remaining.toLocaleString();
+                    remainingCell.style.color = remaining < 0 ? '#c0392b' : '#2c3e50';
+                }
+            }
+        });
+
+        document.getElementById('sumNetLiya').innerText = totalNetLiya.toLocaleString();
+        document.getElementById('sumNetAlih').innerText = totalNetAlih.toLocaleString();
+    }
+
+    function updateType(id, newType) {
+        let item = initialData.find(x => x.id === id);
+        if (item) {
+            item.type = newType;
+            saveToLocalStorage();
+            renderTables();
+        }
+    }
+
+    function deleteRow(id) {
+        initialData = initialData.filter(x => x.id !== id);
+        saveToLocalStorage();
+        renderTables();
+    }
+
+    function addRow() {
+        initialData.push({ id: nextId++, name: "جديد", type: "liya", total: 0, paid: 0 });
+        saveToLocalStorage();
+        renderTables();
+    }
+
+    renderTables();
+</script>
+
+</body>
+</html>
